@@ -1,10 +1,9 @@
 import argparse
+import ast
 import numpy as np
-import re
 
 
 def levenshtein_distance(s1: str, s2: str) -> int:
-    s1, s2 = normalize(s1), normalize(s2)
     dp = np.zeros((len(s1) + 1, len(s2) + 1))
     for i in range(len(s1) + 1):
         for j in range(len(s2) + 1):
@@ -17,16 +16,20 @@ def levenshtein_distance(s1: str, s2: str) -> int:
     return dp[-1][-1]
 
 
-def normalize(code: str) -> str:
-    code = re.sub(r'"""[\s\S]*?"""', '', code)
-    code = re.sub(r"'''[\s\S]*?'''", '', code)
-    code = re.sub(r'#[\s\S]*?\n', '', code)
-    code = re.sub(r' *\n', '\n', code)
-    code = re.sub(r'(\n)*', '\n', code)
-    return code
+class CodeTransformer(ast.NodeTransformer):
+    def visit_arg(self, node):
+        return ast.arg(**{**node.__dict__, 'arg': 'a'})
+
+    def visit_Name(self, node):
+        return ast.Name(**{**node.__dict__, 'id': 'n'})
+
+    def visit_Import(self, node):
+        return None
 
 
 def plagiarism_rate(code1: str, code2: str) -> float:
+    code1 = ast.unparse(CodeTransformer().visit(ast.parse(code1)))
+    code2 = ast.unparse(CodeTransformer().visit(ast.parse(code2)))
     return round(1 - levenshtein_distance(code1, code2) / max(len(code1), len(code2)), 2)
 
 
