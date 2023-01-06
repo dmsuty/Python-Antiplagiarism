@@ -22,7 +22,7 @@ class Code:
             self.code = source.read()
         self.code = re.sub(r'"""[\s\S]*?"""', '', self.code)
         self.code = re.sub(r"'''[\s\S]*?'''", '', self.code)
-        self.code = re.sub(r'#.*?\n', '\n', self.code)
+        # self.code = re.sub(r'#.*?\n', '\n', self.code)
         self.structure = ast.unparse(
             CodeTransformer().visit(ast.parse(self.code)))
 
