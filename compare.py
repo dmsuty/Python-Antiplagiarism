@@ -44,13 +44,23 @@ class Code:
         return dp[-1][-1]
 
     @staticmethod
+    # may be faster with hash-function
     def LCS(code1, code2) -> int:
-        return 1
+        lcs_suff = np.zeros((len(code1.structure) + 1,
+                             len(code2.structure) + 1), int)
+        result = 0
+        for i in range(1, len(code1.structure) + 1):
+            for j in range(1, len(code2.structure) + 1):
+                if code1.structure[i] == code2.structure[j]:
+                    lcs_suff[i][j] = lcs_suff[i][j] + 1
+                result = max(result, lcs_suff[i][j])
+        return result
 
     @staticmethod
     def plagiarism_rate(code1, code2) -> float:
-        return round(1 - Code.levenshtein_distance(code1, code2) /
-                     max(len(code1.structure), len(code2.structure)), 2)
+        lev_coef = Code.levenshtein_distance(
+            code1, code2) / max(len(code1.structure), len(code2.structure))
+        return round(1 - lev_coef, 2)
 
 
 class Solver:
