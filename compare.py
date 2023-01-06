@@ -1,10 +1,4 @@
 #!/usr/bin/python3
-'''
-my plans are:
-    -add exception
-    -add LCS realisation
-    - #... comments problem
-'''
 import argparse
 import ast
 import numpy as np
