@@ -5,30 +5,50 @@ import numpy as np
 import re
 
 
-class CodeTransformer(ast.NodeTransformer):
-    def visit_arg(self, node):
+class CodeTransformer1(ast.NodeTransformer):
+    def visit_arg(self, node: ast.arg) -> ast.arg:
+        '''renaming arguments in function declarations'''
         return ast.arg(**{**node.__dict__, 'arg': 'a'})
 
-    def visit_Name(self, node):
+    def visit_Name(self, node: ast.Name) -> ast.Name:
+        '''renaming names in code'''
         return ast.Name(**{**node.__dict__, 'id': 'n'})
 
-    def visit_Import(self, node):
+    def visit_Import(self, node: ast.Import) -> None:
+        '''removing all imports'''
+        return None
+
+    def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
+        '''removing all from ... imports'''
         return None
 
 
+class CodeTransformer2(ast.NodeTransformer):
+    def visit_ClassDef(self, node: ast.ClassDef) -> ast.ClassDef:
+        '''renaming class definitions'''
+        return ast.ClassDef(**{**node.__dict__, 'name': 'CName'})
+
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> ast.FunctionDef:
+        '''renaming function definitions'''
+        return ast.FunctionDef(**{**node.__dict__, 'name': 'FName'})
+
+
 class Code:
-    def __init__(self, file_name):
+    def __init__(self, file_name: str):
+        '''Load data and converting the code into structure field'''
         with open(file_name, 'r') as source:
             self.code = source.read()
         self.code = re.sub(r'"""[\s\S]*?"""', '', self.code)
         self.code = re.sub(r"'''[\s\S]*?'''", '', self.code)
-        # self.code = re.sub(r'#.*?\n', '\n', self.code)
         self.structure = ast.unparse(
-            CodeTransformer().visit(ast.parse(self.code)))
+            CodeTransformer1().visit(ast.parse(self.code)))
+        self.structure = ast.unparse(
+            CodeTransformer2().visit(ast.parse(self.structure)))
 
     @staticmethod
     # type checking is not good enough at the moment ;(
     def levenshtein_distance(code1, code2) -> int:
+        '''calculating the levenshtein distance'''
         dp = np.zeros((len(code1.structure) + 1,
                       len(code2.structure) + 1), int)
         for i in range(len(code1.structure) + 1):
@@ -46,6 +66,7 @@ class Code:
     @staticmethod
     # may be faster with hash-function
     def LCS(code1, code2) -> int:
+        '''calculating the longest common substring length'''
         lcs_suff = np.zeros((len(code1.structure) + 1,
                              len(code2.structure) + 1), int)
         result = 0
@@ -58,6 +79,7 @@ class Code:
 
     @staticmethod
     def plagiarism_rate(code1, code2) -> float:
+        '''calculationg the plagiarism rate'''
         lev_coef = Code.levenshtein_distance(
             code1, code2) / max(len(code1.structure), len(code2.structure))
         return round(1 - lev_coef, 2)
