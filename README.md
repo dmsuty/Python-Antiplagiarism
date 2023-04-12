@@ -1,4 +1,4 @@
-# Tincoff_antiplagiat
+# Python-Antiplagiarism
 
 ## Описание проекта
 
